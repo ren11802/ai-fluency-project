@@ -21,3 +21,4 @@ The format, with an example (copy the shape, not the words):
 
 ## My log
 
+- W02 · OpenAI Codex (GPT-6) · Used for: drafting the CSTR proposal, updating the three W02 files, and preparing the Git changes · Checked by: Codex reviewed the diff and ran the course's proposal checks. Student review of the project scope and assumptions is pending.
