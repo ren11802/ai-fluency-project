@@ -1,4 +1,4 @@
 # About me
 
-Name: Alon
+Name: Pufan Ren (任璞凡)
 Faculty: Chemical Engineering
