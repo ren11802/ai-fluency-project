@@ -1,74 +1,75 @@
-# Project proposal
+# MembraneProbe — Making Sense of Membrane Resistance
 
 ## 1. The problem and goal
 
-I want to increase the production of B in a jacketed continuous stirred-tank
-reactor (CSTR) that converts A to B in a first-order, exothermic reaction. A
-warmer reactor can make more product, but it can also release heat faster than
-the jacket can remove it. A setting that works with a steady feed can become
-infeasible when the incoming liquid gets warmer or more concentrated.
+An ion-exchange membrane is a thin film that lets certain charged particles,
+called ions, pass through. When two labs report different resistance readings,
+the difference could come from the film material, the film thickness, or the way
+each lab measured it. That makes it hard to tell from the reported numbers how
+easily ions move through the film itself.
 
-I will compare jacket policies in 20-minute simulations at a fixed nominal
-flow rate. The primary score is the lowest time-averaged outlet production
-rate of B across four cases: nominal feed, a 3 K feed-temperature increase, a
-5% feed-concentration increase, and both increases together. The disturbances
-last from minute 5 to minute 10. I will use the same initial state in all cases.
-The initial target is a 10% improvement over a fixed 300 K jacket, with reactor
-temperature at or below 350 K and normalized heat removal at or below 75 K/min
-throughout every case. These are simulation targets for a teaching benchmark.
+I will build a tool that estimates how much of a reading comes from the film
+and how much comes from the test setup. The first version will use measurements
+from films of the same material at several thicknesses under the same test
+conditions. I will test how well it predicts the resistance at a thickness it
+has not seen and whether an AI agent can decide which extra evidence would help
+when two readings are difficult to compare.
 
 ## 2. The simulator
 
-The ground will be a local, callable Python function based on the
-[APMonitor stirred-reactor model](https://apmonitor.com/apps/reactor/instructions.php).
-It will integrate material balances for A and B and an energy balance using
-SciPy's [`solve_ivp`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html).
-I will assume a well-mixed liquid, constant volume and physical properties,
-Arrhenius kinetics, and a jacket temperature that follows the specified policy
-instantaneously. I will express cooling load as heat removed per unit reactor
-thermal capacity, `max(UA * (T - T_jacket), 0) / (rho * Cp * V)`, in K/min.
+A standalone Python model will take measurements and test details from a
+structured file. If a paper reports raw resistance in ohms, the model will
+multiply it by the active test area to get area-specific resistance (ASR) in
+Ω·cm². Measurements already reported in those units will enter directly. To
+estimate the setup contribution, the model will fit uncorrected total ASR
+against thickness for measurements of the same material and ion form made
+under the same conditions with the same test setup.
 
-The function will accept JSON-compatible inputs for the initial state, feed
-schedule, benchmark parameters and jacket policy. It will return concentration
-and temperature traces, average product rate, peak temperature, peak cooling
-load, and the first constraint violation if one occurs. I will split the
-integration at feed changes and check whether the reported peaks stabilize
-as solver tolerances and step sizes are tightened. Before connecting an agent,
-I will check the nominal steady state and verify that the model produces no
-B with the reaction disabled and no B in the initial state or feed. I will
-measure repeatability and aim for less than one second per four-case evaluation.
+```math
+\mathrm{ASR}_{\mathrm{total}}(d) = \frac{d}{\sigma} + \mathrm{ASR}_{\mathrm{extra}}
+```
+
+Here, $d$ is the film thickness in cm, and $\sigma$ is the conductivity across
+the film in S/cm. The model assumes the conductivity and the extra resistance
+stay constant across the thickness series. The slope estimates $1/\sigma$, and
+the intercept estimates the combined resistance from the setup and its contacts.
+I will start by checking the method on one fixed-humidity series from the
+published example below. I can then apply the same procedure to my own research
+samples once comparable measurements are available. To check the predictions, I
+will leave out all measurements at one thickness at a time and report the mean
+absolute error of the held-out predictions in Ω·cm².
+
+[Cooper (2010), Figure 7](https://www.scribner.com/wp-content/uploads/2017/10/Cooper-on-Through-Plane-Resistance-of-PEM-J-Elect-Soc-2010.pdf#page=7)
 
 ## 3. The agent's role
 
-The agent will propose two parameters for the same deterministic jacket
-policy on every run. It can set the nominal jacket temperature between
-300 and 305 K and the feedback gain between 0 and 3 K/K. When the reactor
-exceeds 330 K, the policy lowers the jacket temperature by the gain times
-the excess temperature, with a 290 K lower bound. The agent reads the
-simulated scores and violations before choosing the next pair. For example,
-if only the warmer feed causes a temperature excursion, it can try stronger
-feedback while retaining the nominal jacket temperature. If cooling load
-then exceeds its cap, it can try lowering the nominal temperature to reduce
-heat generation before the disturbance arrives. The simulator evaluates
-each policy, and the final recommendation must pass all four cases.
+The agent will trace measurements to their sources and check whether the papers
+measured and reported the same quantity. When the evidence is incomplete, it
+will decide what to check next. If a methods excerpt can reveal whether a lab
+already subtracted the setup resistance, the agent can request that excerpt. If
+the test conditions match but the available samples are close in thickness, it
+can request a reading at a different thickness. After each request it will
+reassess the comparison and rerun the Python model when the inputs change. It
+will cite the evidence for its conclusion and report **insufficient evidence**
+when the available information cannot support a decision.
 
-A grid search can solve this small numerical problem given enough runs. I
-will compare the agent with a prespecified grid of 20 candidates, giving
-each method the same evaluation budget and comparing the best feasible
-score found. My open question is whether the agent finds feasible settings
-with fewer evaluations by using the type and timing of a violation. I will
-also recheck the selected policies on a separate disturbance case with a
-longer feed pulse.
+I will compare the agent with a fixed rule that first asks for the comparable
+reading that extends the thickness range most, then checks the methods if no
+such reading remains. Both will start with the same records and may request up
+to two evidence items from the same set. I will score their conclusions against
+answers set in advance, including cases that remain unresolved and cases where
+checking a test method matters more than obtaining another reading.
 
 ## Explain your project to someone outside your field
 
-Imagine a tank that turns an incoming liquid into a useful product while
-giving off heat. A cooling jacket wraps around the tank. Running warmer
-can make more product, but a small change in the incoming liquid can make
-the tank heat up faster than the jacket can cool it.
+Imagine two labs testing the same kind of film. One lab reports the resistance
+of the film and its holder together. The other lab subtracts its holder's
+contribution before reporting a number. The two results can differ even when
+the films behave the same way. Testing several thicknesses under the same
+conditions helps separate the two contributions. The way the reading rises as
+the film gets thicker tells us about the film, and the model estimates what
+would be left at zero thickness.
 
-I will build a computer model that lets me try different cooling settings
-when the incoming liquid changes. The AI will use the model's results to
-choose what to try next. I will compare its choices with a simple checklist
-of settings and see which approach finds a way to make more product while
-staying within the temperature and cooling limits.
+When two numbers are hard to compare, the tool will suggest a specific next
+step, such as checking how one lab reported its result. It will explain what
+that check tells us and say when the comparison is still uncertain.
