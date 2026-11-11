@@ -9,7 +9,7 @@ dependencies = []
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
-    "proposal_complete: checks that every section of docs/project-proposal.md has been written (CI runs these on your fork only)",
+    "proposal_complete: checks that every section of project-proposal.md has been written (CI runs these on your fork only)",
 ]
 
 [dependency-groups]

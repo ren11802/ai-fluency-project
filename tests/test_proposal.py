@@ -1,4 +1,4 @@
-"""Checks on docs/project-proposal.md (and on about-me.md for conflict markers).
+"""Checks on project-proposal.md (and on about-me.md for conflict markers).
 
 Two kinds of check live here:
 
@@ -19,8 +19,8 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-PROPOSAL = ROOT / "docs" / "project-proposal.md"
-PROPOSAL_NAME = "docs/project-proposal.md"
+PROPOSAL_NAME = "project-proposal.md"
+PROPOSAL = ROOT / PROPOSAL_NAME
 ABOUT_ME = ROOT / "about-me.md"
 
 # The four sections of the Week 1 template. The patterns match the heading's
