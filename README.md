@@ -26,7 +26,7 @@ choose between two versions of the same lines, so you choose.
 | Path | What it is |
 | --- | --- |
 | `about-me.md` | Your name and faculty. |
-| `docs/project-proposal.md` | Your project proposal. It starts as the blank Week 1 template; replace it with your own. Keep the four section headings and the file name. |
+| `project-proposal.md` | Your project proposal. It starts as the blank Week 1 template; replace it with your own. Keep the four section headings and the file name. |
 | `docs/disclosure.md` | Your AI-usage log: one line at the end of every exercise session. |
 | `tests/test_proposal.py` | Checks on the proposal and on `about-me.md` (see "The checks" below). Your own tests go in `tests/` too. |
 | `.github/workflows/ci.yml` | Tells GitHub to run the checks on every change to `main`. |
@@ -38,11 +38,11 @@ choose between two versions of the same lines, so you choose.
 The Week 2 exercise session walks through every step in VS Code.
 
 1. **Fork this repository** to your own account. On the fork page, untick **Copy the
-   `main` branch only**: you need `develop` too. Keep the name `ai-fluency-project`.
+   `main` branch only**: you need `develop` too. Name your fork `my-project` for submission.
 2. **Clone your fork** in VS Code, inside your Linux home folder (on Windows: in WSL,
    never under `/mnt/c`).
 3. **Switch to `develop`.** Put your own name and faculty in `about-me.md`, copy in your
-   Week 1 proposal (`cp ~/my-project/docs/project-proposal.md docs/`), and add your W02
+   Week 1 proposal as `project-proposal.md` in the repository root, and add your W02
    line at the end of `docs/disclosure.md`. Commit, and push `develop`.
 4. **Merge `develop` into `main`.** Keep your own lines in `about-me.md`, commit the
    merge, and push `main`.
@@ -51,7 +51,7 @@ The Week 2 exercise session walks through every step in VS Code.
 
 | Check | When it runs | What it asks |
 | --- | --- | --- |
-| **Proposal structure** | every change on `main` | The proposal exists at `docs/project-proposal.md` and keeps its four section headings, and neither it nor `about-me.md` has merge-conflict markers left (`<<<<<<<`, `>>>>>>>`, or a line of exactly seven `=`, `=======`). |
+| **Proposal structure** | every change on `main` | The proposal exists at `project-proposal.md` and keeps its four section headings, and neither it nor `about-me.md` has merge-conflict markers left (`<<<<<<<`, `>>>>>>>`, or a line of exactly seven `=`, `=======`). |
 | **Proposal complete** | every change on `main` of your fork | No section of the proposal still has a `<!-- ... -->` placeholder. |
 
 GitHub switches the checks off on a new fork: open your fork's **Actions** tab once and
